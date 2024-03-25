@@ -1,8 +1,31 @@
 import React from 'react'
-import properties from '@/properties.json'
 import PropertyCard from '@/components/PropertyCard'
 
-const PropertiesPage = () => {
+//Fetch properties
+async function fetchProperties() {
+	try {
+		const res = await fetch(
+			`${process.env.NEXT_PUBLIC_API_DOMAIN}/properties`,
+			{ cache: 'no-store' }
+		)
+
+		if (!res.ok) {
+			throw new Error('Failed to fetch data')
+		}
+
+		return res.json()
+	} catch (error) {
+		console.log(error)
+	}
+}
+
+const PropertiesPage = async () => {
+	//Fetch properties to display
+	const properties = await fetchProperties()
+
+	//Sort by date
+	properties.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+
 	return (
 		<section className='px-4 py-6'>
 			<div className='container-xl lg:container m-auto px-4 py-6'>
