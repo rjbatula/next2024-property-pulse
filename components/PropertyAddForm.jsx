@@ -34,9 +34,74 @@ const PropertyAddForm = () => {
 	}, [])
 
 	// Change handlers for the form
-	const handleChange = () => {}
-	const handleAmenitiesChange = () => {}
-	const handleImageChange = () => {}
+	const handleChange = (e) => {
+		const { name, value } = e.target
+
+		// Update a nested field's value
+		if (name.includes('.')) {
+			const [outerKey, innerKey] = name.split('.')
+
+			//Setting the value in state
+			setFields((prevFields) => ({
+				...prevFields,
+				[outerKey]: {
+					...prevFields[outerKey],
+					[innerKey]: value,
+				},
+			}))
+		} else {
+			// If not nested fields
+			setFields((prevFields) => ({
+				...prevFields,
+				[name]: value,
+			}))
+		}
+	}
+
+	const handleAmenitiesChange = (e) => {
+		const { checked, value } = e.target
+
+		// Clone current array
+		const updatedAmenities = [...fields.amenities]
+
+		if (checked) {
+			// Add value to current array
+			updatedAmenities.push(value)
+		} else {
+			// Remove value from array
+			const index = updatedAmenities.indexOf(value)
+
+			// if not -1
+			if (index !== -1) {
+				updatedAmenities.splice(index, 1)
+			}
+		}
+
+		// Update state with updated amenities
+		setFields((prevFields) => ({
+			...prevFields,
+			amenities: updatedAmenities,
+		}))
+	}
+
+	const handleImageChange = (e) => {
+		console.log('clicked')
+		const { files } = e.target
+
+		// Clone images array
+		const updatedImages = [...fields.images]
+
+		// Add new files into array
+		for (const file of files) {
+			updatedImages.push(file)
+		}
+
+		// Update state with updated array of images
+		setFields((prevFields) => ({
+			...prevFields,
+			images: updatedImages,
+		}))
+	}
 
 	return (
 		mounted && (
@@ -85,8 +150,6 @@ const PropertyAddForm = () => {
 					<label
 						htmlFor='description'
 						className='block text-gray-700 font-bold mb-2'
-						value={fields.description}
-						onChange={handleChange}
 					>
 						Description
 					</label>
@@ -96,6 +159,8 @@ const PropertyAddForm = () => {
 						className='border rounded w-full py-2 px-3'
 						rows='4'
 						placeholder='Add an optional description of your property'
+						value={fields.description}
+						onChange={handleChange}
 					></textarea>
 				</div>
 
