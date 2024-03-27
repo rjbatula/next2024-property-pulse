@@ -1,5 +1,7 @@
 import connectDB from '@/config/database'
 import Property from '@/models/Property'
+import { getSessionUser } from '@/utils/getSessionUser'
+import cloudinary from '@/config/cloudinary'
 
 // GET /api/properties
 export const GET = async (request) => {
@@ -23,6 +25,18 @@ export const GET = async (request) => {
 // POST /api/properties
 export const POST = async (request) => {
 	try {
+		// connect to DB
+		await connectDB()
+
+		// Get id from session
+		const sessionUser = await getSessionUser()
+
+		if (!sessionUser || !sessionUser.userId) {
+			return new Response('User ID is required', { status: 401 })
+		}
+
+		const { userId } = sessionUser
+
 		const formData = await request.formData()
 
 		// Handle all values from amenities and images
@@ -56,13 +70,50 @@ export const POST = async (request) => {
 				email: formData.get('seller_info.email'),
 				phone: formData.get('seller_info.phone'),
 			},
-			images,
+			owner: userId,
 		}
 
-		console.log(propertyData)
+		// Upload images to cloudinary
+		const imageUploadPromises = []
 
-		return new Response(JSON.stringify({ message: 'Success' }), { status: 200 })
+		for (const image of images) {
+			const imageBuffer = await image.arrayBuffer()
+			const imageArray = Array.from(new Uint8Array(imageBuffer))
+			const imageData = Buffer.from(imageArray)
+
+			// Convert image data to base64
+			const imageBase64 = imageData.toString('base64')
+
+			// Make req to upload to cloudinary
+			const result = await cloudinary.uploader.upload(
+				`data:image/png;base64,${imageBase64}`,
+				{
+					folder: 'propertypulse',
+				}
+			)
+
+			// Push to array
+			imageUploadPromises.push(result.secure_url)
+
+			//Wait for all images to upload
+			const uploadedImages = await Promise.all(imageUploadPromises)
+
+			// Add uploaded images to propertyData object
+			propertyData.images = uploadedImages
+		}
+
+		// Save to DB
+		const newProperty = new Property(propertyData)
+		await newProperty.save()
+
+		// Redirect to the created property details page
+		return Response.redirect(
+			`${process.env.NEXT_AUTH_URL}/properties/${newProperty._id}`
+		)
+
+		// return new Response(JSON.stringify({ message: 'Success' }), { status: 200 })
 	} catch (error) {
+		console.log(error)
 		return new Response(JSON.stringify('Failed to add property'), {
 			status: 500,
 		})
