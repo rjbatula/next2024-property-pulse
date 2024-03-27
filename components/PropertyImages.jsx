@@ -9,8 +9,8 @@ const PropertyImages = ({ images }) => {
 						src={images[0]}
 						alt=''
 						className='object-cover h-[400px] mx-auto rounded-xl'
-						width={0}
-						height={0}
+						width={1800}
+						height={400}
 						sizes='100vw'
 						priority={true}
 					/>
