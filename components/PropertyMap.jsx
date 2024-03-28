@@ -18,6 +18,7 @@ const PropertyMap = ({ property }) => {
 		height: '500px',
 	})
 	const [loading, setLoading] = useState(true)
+	const [geocodeError, setGeocodeError] = useState(false)
 
 	// Set default for geocoding
 	setDefaults({
@@ -28,20 +29,34 @@ const PropertyMap = ({ property }) => {
 
 	// pass the address to fromAddress
 	useEffect(() => {
-		const fetchCoords = async () => {
-			const res = await fromAddress(
-				`${property.location.street} ${property.location.city} ${property.location.state} ${property.location.zipcode}`
-			)
+		try {
+			const fetchCoords = async () => {
+				const res = await fromAddress(
+					`${property.location.street} ${property.location.city} ${property.location.state} ${property.location.zipcode}`
+				)
 
-			const { lat, lng } = res.results[0].geometry.location
+				// Check res for result in geocode
+				if (res.results.length === 0) {
+					// No results found
+					setGeocodeError(true)
+					setLoading(false)
+					return
+				}
 
-			setLat(lat)
-			setLng(lng)
-			setViewport({
-				...viewport,
-				latitude: lat,
-				longitude: lng,
-			})
+				const { lat, lng } = res.results[0].geometry.location
+
+				setLat(lat)
+				setLng(lng)
+				setViewport({
+					...viewport,
+					latitude: lat,
+					longitude: lng,
+				})
+				setLoading(false)
+			}
+		} catch (error) {
+			console.log(error)
+			setGeocodeError(true)
 			setLoading(false)
 		}
 		fetchCoords()
@@ -49,6 +64,10 @@ const PropertyMap = ({ property }) => {
 
 	if (loading) return <Spinner loading={loading} />
 
+	// Handle case where geocode fail
+	if (geocodeError) {
+		return <div className='text-xl'>No Location Data Found</div>
+	}
 	return (
 		!loading && (
 			<Map
