@@ -29,8 +29,8 @@ const PropertyMap = ({ property }) => {
 
 	// pass the address to fromAddress
 	useEffect(() => {
-		try {
-			const fetchCoords = async () => {
+		const fetchCoords = async () => {
+			try {
 				const res = await fromAddress(
 					`${property.location.street} ${property.location.city} ${property.location.state} ${property.location.zipcode}`
 				)
@@ -53,11 +53,11 @@ const PropertyMap = ({ property }) => {
 					longitude: lng,
 				})
 				setLoading(false)
+			} catch (error) {
+				console.log(error)
+				setGeocodeError(true)
+				setLoading(false)
 			}
-		} catch (error) {
-			console.log(error)
-			setGeocodeError(true)
-			setLoading(false)
 		}
 		fetchCoords()
 	}, [])
