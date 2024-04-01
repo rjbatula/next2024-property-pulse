@@ -16,7 +16,7 @@ export const POST = async (request) => {
 		const sessionUser = await getSessionUser()
 
 		// Check session
-		if (!session || !session.userId) {
+		if (!sessionUser || !sessionUser.userId) {
 			return new Response('User ID is required', { status: 401 })
 		}
 
