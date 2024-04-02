@@ -4,17 +4,17 @@ const MessageSchema = new Schema(
 	{
 		sender: {
 			type: Schema.Types.ObjectId,
-			ref: User,
+			ref: 'User',
 			required: true,
 		},
 		recipient: {
 			type: Schema.Types.ObjectId,
-			ref: User,
+			ref: 'User',
 			required: true,
 		},
 		property: {
 			type: Schema.Types.ObjectId,
-			ref: Property,
+			ref: 'Property',
 			required: true,
 		},
 		name: {
