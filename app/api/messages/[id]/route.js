@@ -47,3 +47,44 @@ export const PUT = async (request, { params }) => {
 		return new Response('Something went wrong', { status: 500 })
 	}
 }
+
+// DELETE /api/messages/:id
+export const DELETE = async (request, { params }) => {
+	try {
+		await connectDB()
+
+		// Get Params id
+		const { id } = params
+
+		// Get Session User
+		const sessionUser = await getSessionUser()
+
+		// Check session
+		if (!sessionUser || !sessionUser.user) {
+			return new Response('User ID is required', {
+				status: 401,
+			})
+		}
+
+		// Get User
+		const { userId } = sessionUser
+
+		const message = await Message.findById(id)
+
+		if (!message) {
+			return new Response('Message not found', { status: 404 })
+		}
+
+		// Verfiy ownership
+		if (message.recipient.toString() !== userId) {
+			return new Response('Unauthorised', { status: 401 })
+		}
+
+		await message.deleteOne()
+
+		return new Response('Message Deleted', { status: 200 })
+	} catch (error) {
+		console.log(error)
+		return new Response('Something went wrong', { status: 500 })
+	}
+}
