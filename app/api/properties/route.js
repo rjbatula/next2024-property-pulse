@@ -9,11 +9,24 @@ export const GET = async (request) => {
 		//Connect to DB
 		await connectDB()
 
+		// For pagination
+		const page = request.nextUrl.searchParams.get('page') || 1
+		const pageSize = request.nextUrl.searchParams.get('pageSize') || 6
+
+		const skip = (page - 1) * pageSize
+
+		const total = await Property.countDocuments({})
+
 		//Fetch all properties in the DB
-		const properties = await Property.find({})
+		const properties = await Property.find({}).skip(skip).limit(pageSize)
+
+		const result = {
+			total,
+			properties,
+		}
 
 		//Return all properties
-		return new Response(JSON.stringify(properties), {
+		return new Response(JSON.stringify(result), {
 			status: 200,
 		})
 	} catch (error) {
